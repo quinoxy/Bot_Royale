@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 
 enum struct Player{
     NONE,
@@ -31,7 +32,8 @@ public:
     bool makeMove(int x, int y, Player player);
     bool cellExploding(int x, int y);
     bool checkValidCell(int x, int y);
-    
+    bool checkWin(int plyNumber, Player player);
+
 
     
 private:
