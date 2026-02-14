@@ -1,9 +1,10 @@
-from enum import Enum
 
-class Player(Enum):
-    NONE = 0
-    RED = 1
-    BLUE = 2
+import pygame
+from constants import *
+from draw import draw_intermediaries
+
+
+
 
 class BoardCell:
     def __init__(self):
@@ -23,10 +24,11 @@ class VisualUpdate:
         self.num_pieces_in_cell = num_pieces_in_cell
 
 class Board:
-    def __init__(self, rows, cols):
+    def __init__(self, rows, cols, win):
         self.rows = rows
         self.cols = cols
         self.board = [[BoardCell() for _ in range(cols)] for _ in range(rows)]
+        self.win = win
 
     def display(self):
         for i in range(self.rows):
@@ -40,7 +42,6 @@ class Board:
                 elif cell.player == Player.BLUE:
                     row_display.append(f'B{cell.count}')
             print('|'.join(row_display))
-        
 
     def makeMove(self, x, y, player):
         
@@ -57,8 +58,6 @@ class Board:
             print("Invalid move. Cell is occupied by the opponent.")
             return False
 
-        # this will hold the visual updates for the display module to show after all updates are processed
-        visual_updates = [] # List(List(VisualUpdate))
         
         # queue fro processing cell updates, starting with initial move
         update_queue = [[Position(x, y), Position(x, y)]] # pair to store from where to where does the piece go
@@ -84,7 +83,6 @@ class Board:
                 cell.player = player
 
                 # add the visual update for this move to the list of updates
-                visual_updates_this_turn.append(VisualUpdate(from_pos, to_pos, player, cell.count))
                 
                 # if the cell is exploding, reset it and add its neighbors to the next update queue
                 if self.cellExploding(to_pos.x, to_pos.y):
@@ -98,16 +96,12 @@ class Board:
                         new_y = to_pos.y + d[1]
                         if self.checkValidCell(new_x, new_y):
                             next_update_queue.append([Position(to_pos.x, to_pos.y), Position(new_x, new_y)])
-            
+                            visual_updates_this_turn.append(VisualUpdate(to_pos, Position(new_x, new_y), player, self.board[new_x][new_y].count + 1)) # +1 because the piece will be added to the new cell in the next update
             # move to the next set of updates for the next iteration
             update_queue = next_update_queue
 
             #once all updates for this turn are processed, add the visual updates to the main list of visual updates to be shown by the display module
-            visual_updates.append(visual_updates_this_turn)
-
-            # call the display module here to show the visual updates one by one
-            # something like
-            # displayModule.showVisualUpdates(visual_updates_this_turn)
+            draw_intermediaries(player, self, visual_updates_this_turn)
 
         return True
 
