@@ -1,3 +1,0 @@
-int ROWS = 7;
-int COLS = 7;
-int TOTAL_MOVES_THRESHOLD = 1000; 
