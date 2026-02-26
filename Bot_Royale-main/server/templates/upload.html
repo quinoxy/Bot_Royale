@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Royale — Upload Your Bot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #1e1e35;
+            --accent: #e94560;
+            --accent-glow: rgba(233, 69, 96, 0.3);
+            --accent-secondary: #0f3460;
+            --text-primary: #eaeaea;
+            --text-secondary: #8888a0;
+            --border: #2a2a40;
+            --success: #00c853;
+            --error: #ff5252;
+            --warning: #ffab00;
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(233, 69, 96, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(15, 52, 96, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(233, 69, 96, 0.05) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Navigation */
+        .nav {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .nav-brand {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--text-primary);
+        }
+
+        .nav-links a.active {
+            color: var(--accent);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-top: 2rem;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #e94560 0%, #ff6b81 50%, #e94560 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Closed banner */
+        .closed-banner {
+            background: rgba(255, 82, 82, 0.1);
+            border: 1px solid rgba(255, 82, 82, 0.25);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .closed-banner h3 {
+            color: var(--error);
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .closed-banner p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Flash messages */
+        .flash {
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .flash.success {
+            background: rgba(0, 200, 83, 0.12);
+            border: 1px solid rgba(0, 200, 83, 0.3);
+            color: var(--success);
+        }
+
+        .flash.error {
+            background: rgba(255, 82, 82, 0.12);
+            border: 1px solid rgba(255, 82, 82, 0.3);
+            color: var(--error);
+        }
+
+        /* Upload card */
+        .upload-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .upload-card:hover {
+            border-color: rgba(233, 69, 96, 0.3);
+        }
+
+        .upload-card.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .upload-card h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-group input[type="text"]::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Custom file input */
+        .file-upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--bg-secondary);
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(233, 69, 96, 0.05);
+        }
+
+        .file-upload-area.has-file {
+            border-color: var(--success);
+            background: rgba(0, 200, 83, 0.05);
+        }
+
+        .file-upload-area input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-upload-text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .file-upload-name {
+            color: var(--success);
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        /* Submit button */
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #e94560, #c23152);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--accent-glow);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Rules card */
+        .rules-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .rules-card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .rules-card pre {
+            background: var(--bg-secondary);
+            padding: 1.25rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            line-height: 1.6;
+            color: #c0c0d0;
+            border: 1px solid var(--border);
+        }
+
+        .rules-card code {
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .rules-card p,
+        .rules-card li {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 0.5rem;
+        }
+
+        .rules-card ul {
+            padding-left: 1.5rem;
+        }
+
+        /* Teams table */
+        .teams-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+        }
+
+        .teams-card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .teams-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .teams-table th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .teams-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(42, 42, 64, 0.5);
+            font-size: 0.95rem;
+        }
+
+        .teams-table tr:hover td {
+            background: var(--bg-card-hover);
+        }
+
+        .no-teams {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 2rem;
+            font-style: italic;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <a class="nav-brand" href="/">⚔ Bot Royale</a>
+        <ul class="nav-links">
+            <li><a href="/" class="active">Upload</a></li>
+            <li><a href="http://localhost:5001">Leaderboard</a></li>
+            <li><a href="http://localhost:5002">Admin</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>⚔ Bot Royale</h1>
+            <p>Upload your Chain Reaction bot and fight for glory</p>
+        </div>
+
+        <!-- Submissions closed banner -->
+        {% if not submissions_open %}
+        <div class="closed-banner">
+            <h3>🚫 Submissions Closed</h3>
+            <p>Bot submissions are currently closed. Check back later or ask an admin to open submissions.</p>
+        </div>
+        {% endif %}
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Upload form -->
+        <div class="upload-card {% if not submissions_open %}disabled{% endif %}">
+            <h2>🚀 Upload Your Bot</h2>
+            <form method="POST" action="/upload" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="team_name">Team Name</label>
+                    <input type="text" id="team_name" name="team_name" placeholder="e.g. Alpha Coders" required
+                        maxlength="30" {% if not submissions_open %}disabled{% endif %}>
+                </div>
+
+                <div class="form-group">
+                    <label>Bot File (.py)</label>
+                    <div class="file-upload-area" id="dropZone" onclick="document.getElementById('bot_file').click()">
+                        <div class="file-upload-icon">📄</div>
+                        <div class="file-upload-text">Click to select your Python bot file<br><small>Max 100KB • .py
+                                files only</small></div>
+                        <div class="file-upload-name" id="fileName"></div>
+                        <input type="file" id="bot_file" name="bot_file" accept=".py" required {% if not
+                            submissions_open %}disabled{% endif %}>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" {% if not submissions_open %}disabled{% endif %}>
+                    {% if submissions_open %}Upload Bot{% else %}Submissions Closed{% endif %}
+                </button>
+            </form>
+        </div>
+
+        <!-- Bot writing rules -->
+        <div class="rules-card">
+            <h2>📋 How to Write Your Bot</h2>
+            <p>Your bot communicates via <strong>stdin/stdout</strong>. On each turn:</p>
+            <ul>
+                <li>Read one line from stdin → JSON with the board state</li>
+                <li>Print one line to stdout → <code>row col</code> (your move)</li>
+            </ul>
+            <p style="margin-top: 1rem;"><strong>Board state JSON format:</strong></p>
+            <pre><code>{
+  "board": [[count, owner], ...],  // 7×7 grid
+  "player": 1,                     // 1=RED, 2=BLUE (you)
+  "move_number": 5,
+  "rows": 7, "cols": 7
+}
+// owner: 0=NONE, 1=RED, 2=BLUE</code></pre>
+            <p style="margin-top: 1rem;"><strong>Example bot (plays first valid cell):</strong></p>
+            <pre><code>import json, sys
+
+while True:
+    line = input()
+    state = json.loads(line)
+    me = state["player"]
+    board = state["board"]
+
+    for r in range(7):
+        for c in range(7):
+            owner = board[r][c][1]
+            if owner == 0 or owner == me:
+                print(f"{r} {c}", flush=True)
+                break
+        else:
+            continue
+        break</code></pre>
+
+            <p style="margin-top: 1rem;"><strong>Rules:</strong></p>
+            <ul>
+                <li>⏱ You have <strong>2 seconds</strong> per move</li>
+                <li>❌ Invalid move = disqualification</li>
+                <li>💥 Crash or timeout = disqualification</li>
+                <li>🏆 Win by eliminating all opponent pieces</li>
+            </ul>
+        </div>
+
+        <!-- Registered teams -->
+        <div class="teams-card">
+            <h2>👥 Registered Teams ({{ teams|length }})</h2>
+            {% if teams %}
+            <table class="teams-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Team Name</th>
+                        <th>Last Upload</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for team in teams %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ team.name }}</td>
+                        <td>{{ team.uploaded_at[:16] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-teams">No teams registered yet. Be the first!</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('bot_file');
+        const dropZone = document.getElementById('dropZone');
+        const fileName = document.getElementById('fileName');
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileName.textContent = '✓ ' + fileInput.files[0].name;
+                dropZone.classList.add('has-file');
+            }
+        });
+
+        // Drag and drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--accent)';
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '';
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '';
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                fileName.textContent = '✓ ' + e.dataTransfer.files[0].name;
+                dropZone.classList.add('has-file');
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Replay — Bot Royale</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --accent: #e94560;
+            --accent-glow: rgba(233, 69, 96, 0.3);
+            --text-primary: #eaeaea;
+            --text-secondary: #8888a0;
+            --border: #2a2a40;
+            --red-color: #ff4757;
+            --blue-color: #3498db;
+            --empty-color: #2a2a40;
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 30% 30%, rgba(233, 69, 96, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 70%, rgba(15, 52, 96, 0.1) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        .nav {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .nav-brand {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .back-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-bottom: 1.5rem;
+            transition: opacity 0.2s;
+        }
+
+        .back-link:hover {
+            opacity: 0.7;
+        }
+
+        .match-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .match-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .match-header .team-red {
+            color: var(--red-color);
+        }
+
+        .match-header .team-blue {
+            color: var(--blue-color);
+        }
+
+        .match-header .vs {
+            color: var(--text-secondary);
+            margin: 0 0.5rem;
+        }
+
+        .result-badge {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .result-badge.win {
+            background: rgba(0, 200, 83, 0.15);
+            color: #00c853;
+            border: 1px solid rgba(0, 200, 83, 0.3);
+        }
+
+        .result-badge.draw {
+            background: rgba(136, 136, 160, 0.15);
+            color: var(--text-secondary);
+            border: 1px solid rgba(136, 136, 160, 0.3);
+        }
+
+        .result-badge.dq {
+            background: rgba(255, 82, 82, 0.15);
+            color: #ff5252;
+            border: 1px solid rgba(255, 82, 82, 0.3);
+        }
+
+        /* Board grid */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .board-container {
+            display: flex;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 3px;
+            background: var(--border);
+            padding: 3px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .cell.red {
+            background: rgba(255, 71, 87, 0.2);
+            color: var(--red-color);
+            box-shadow: inset 0 0 12px rgba(255, 71, 87, 0.15);
+        }
+
+        .cell.blue {
+            background: rgba(52, 152, 219, 0.2);
+            color: var(--blue-color);
+            box-shadow: inset 0 0 12px rgba(52, 152, 219, 0.15);
+        }
+
+        .cell.highlight {
+            outline: 2px solid var(--accent);
+            outline-offset: -2px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .ctrl-btn {
+            padding: 0.6rem 1.2rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .ctrl-btn:hover {
+            border-color: var(--accent);
+            background: rgba(233, 69, 96, 0.1);
+        }
+
+        .ctrl-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .ctrl-btn.primary {
+            background: linear-gradient(135deg, var(--accent), #c23152);
+            border: none;
+            color: white;
+        }
+
+        .ctrl-btn.primary:hover {
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .move-counter {
+            font-weight: 700;
+            font-size: 1.1rem;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .move-counter span {
+            color: var(--accent);
+        }
+
+        /* Speed control */
+        .speed-control {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .speed-control input[type="range"] {
+            width: 120px;
+            accent-color: var(--accent);
+        }
+
+        /* Move log */
+        .move-log {
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+        }
+
+        .move-log-entry {
+            display: flex;
+            gap: 1rem;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid rgba(42, 42, 64, 0.3);
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .move-log-entry:hover {
+            background: rgba(233, 69, 96, 0.05);
+        }
+
+        .move-log-entry.active {
+            background: rgba(233, 69, 96, 0.1);
+            border-left: 3px solid var(--accent);
+        }
+
+        .move-num {
+            color: var(--text-secondary);
+            font-weight: 600;
+            min-width: 35px;
+        }
+
+        .move-team {
+            font-weight: 600;
+            min-width: 80px;
+        }
+
+        .move-team.red {
+            color: var(--red-color);
+        }
+
+        .move-team.blue {
+            color: var(--blue-color);
+        }
+
+        .move-cell {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <a class="nav-brand" href="http://localhost:5001">⚔ Bot Royale</a>
+        <ul class="nav-links">
+            <li><a href="http://localhost:5000">Upload</a></li>
+            <li><a href="http://localhost:5001">Leaderboard</a></li>
+            <li><a href="http://localhost:5002">Admin</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <a class="back-link" href="/">← Back to Leaderboard</a>
+
+        <div class="match-header">
+            <h1>
+                <a href="/team/{{ match.team1 }}" style="color: var(--red-color); text-decoration: none;">{{ match.team1
+                    }}</a>
+                <span class="vs">vs</span>
+                <a href="/team/{{ match.team2 }}" style="color: var(--blue-color); text-decoration: none;">{{
+                    match.team2 }}</a>
+            </h1>
+            {% if match.winner and match.winner.startswith('DQ:') %}
+            <div class="result-badge dq">{{ match.result_desc }}</div>
+            {% elif match.winner %}
+            <div class="result-badge win">🏆 {{ match.winner }} wins!</div>
+            {% else %}
+            <div class="result-badge draw">🤝 Draw</div>
+            {% endif %}
+        </div>
+
+        <!-- Board replay -->
+        <div class="card">
+            <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem;">🎬 Game Replay</h2>
+
+            <div class="speed-control">
+                <span>Speed:</span>
+                <input type="range" id="speedSlider" min="1" max="20" value="5">
+                <span id="speedLabel">5×</span>
+            </div>
+
+            <div class="board-container">
+                <div class="board-grid" id="boardGrid"></div>
+            </div>
+
+            <div class="controls">
+                <button class="ctrl-btn" id="btnStart" onclick="goToMove(0)">⏮</button>
+                <button class="ctrl-btn" id="btnPrev" onclick="prevMove()">◀</button>
+                <button class="ctrl-btn primary" id="btnPlay" onclick="togglePlay()">▶ Play</button>
+                <button class="ctrl-btn" id="btnNext" onclick="nextMove()">▶</button>
+                <button class="ctrl-btn" id="btnEnd" onclick="goToMove(moves.length)">⏭</button>
+                <div class="move-counter">Move <span id="moveNum">0</span> / <span>{{ moves|length }}</span></div>
+            </div>
+        </div>
+
+        <!-- Move log -->
+        <div class="card">
+            <h2 style="font-size: 1.3rem; margin-bottom: 1rem;">📜 Move Log</h2>
+            <div class="move-log" id="moveLog"></div>
+        </div>
+    </div>
+
+    <script>
+        const moves = {{ moves_json | safe }};
+        let currentMove = -1;
+        let playing = false;
+        let playInterval = null;
+        let speed = 5;
+
+        const ROWS = 7, COLS = 7;
+
+        // Initialize empty board grid
+        function initBoard() {
+            const grid = document.getElementById('boardGrid');
+            grid.innerHTML = '';
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `cell-${r}-${c}`;
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // Render board state at a given move index (-1 = empty board)
+        function renderBoard(moveIdx) {
+            let lastRow = -1, lastCol = -1;
+
+            if (moveIdx >= 0 && moveIdx < moves.length) {
+                const board = moves[moveIdx].board_after;
+                lastRow = moves[moveIdx].row;
+                lastCol = moves[moveIdx].col;
+
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        const cell = document.getElementById(`cell-${r}-${c}`);
+                        const [count, owner] = board[r][c];
+                        cell.className = 'cell';
+                        if (owner === 1) {
+                            cell.classList.add('red');
+                            cell.textContent = count;
+                        } else if (owner === 2) {
+                            cell.classList.add('blue');
+                            cell.textContent = count;
+                        } else {
+                            cell.textContent = '';
+                        }
+                        if (r === lastRow && c === lastCol) {
+                            cell.classList.add('highlight');
+                        }
+                    }
+                }
+            } else {
+                // Empty board
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        const cell = document.getElementById(`cell-${r}-${c}`);
+                        cell.className = 'cell';
+                        cell.textContent = '';
+                    }
+                }
+            }
+        }
+
+        // Build move log
+        function buildMoveLog() {
+            const log = document.getElementById('moveLog');
+            if (moves.length === 0) {
+                log.innerHTML = '<div style="text-align:center; color:var(--text-secondary); padding:1rem;">No moves recorded</div>';
+                return;
+            }
+            log.innerHTML = moves.map((m, i) => `
+                <div class="move-log-entry" id="log-${i}" onclick="goToMove(${i + 1})">
+                    <div class="move-num">#${i + 1}</div>
+                    <div class="move-team ${m.player === 1 ? 'red' : 'blue'}">${m.team}</div>
+                    <div class="move-cell">(${m.row}, ${m.col})</div>
+                </div>
+            `).join('');
+        }
+
+        function updateUI() {
+            document.getElementById('moveNum').textContent = currentMove + 1;
+
+            // Highlight active log entry
+            document.querySelectorAll('.move-log-entry').forEach((el, i) => {
+                el.classList.toggle('active', i === currentMove);
+            });
+
+            // Scroll active entry into view
+            if (currentMove >= 0) {
+                const el = document.getElementById(`log-${currentMove}`);
+                if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+
+            // Update button states
+            document.getElementById('btnPrev').disabled = currentMove < 0;
+            document.getElementById('btnStart').disabled = currentMove < 0;
+            document.getElementById('btnNext').disabled = currentMove >= moves.length - 1;
+            document.getElementById('btnEnd').disabled = currentMove >= moves.length - 1;
+        }
+
+        function goToMove(n) {
+            // n is 1-indexed for move log clicks, 0 = start
+            currentMove = n - 1;
+            renderBoard(currentMove);
+            updateUI();
+        }
+
+        function nextMove() {
+            if (currentMove < moves.length - 1) {
+                currentMove++;
+                renderBoard(currentMove);
+                updateUI();
+            } else {
+                stopPlay();
+            }
+        }
+
+        function prevMove() {
+            if (currentMove >= 0) {
+                currentMove--;
+                renderBoard(currentMove);
+                updateUI();
+            }
+        }
+
+        function togglePlay() {
+            if (playing) {
+                stopPlay();
+            } else {
+                playing = true;
+                document.getElementById('btnPlay').textContent = '⏸ Pause';
+                if (currentMove >= moves.length - 1) currentMove = -1;
+                playInterval = setInterval(() => {
+                    nextMove();
+                    if (currentMove >= moves.length - 1) stopPlay();
+                }, 1000 / speed);
+            }
+        }
+
+        function stopPlay() {
+            playing = false;
+            document.getElementById('btnPlay').textContent = '▶ Play';
+            if (playInterval) clearInterval(playInterval);
+        }
+
+        // Speed slider
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            speed = parseInt(e.target.value);
+            document.getElementById('speedLabel').textContent = speed + '×';
+            if (playing) {
+                clearInterval(playInterval);
+                playInterval = setInterval(() => {
+                    nextMove();
+                    if (currentMove >= moves.length - 1) stopPlay();
+                }, 1000 / speed);
+            }
+        });
+
+        // Init
+        initBoard();
+        buildMoveLog();
+        renderBoard(-1);
+        updateUI();
+    </script>
+</body>
+
+</html>
