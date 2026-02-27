@@ -5,7 +5,6 @@ Pure game logic that can be used by the bot runner.
 
 from enum import IntEnum
 import json
-import copy
 
 
 class Player(IntEnum):
@@ -29,9 +28,6 @@ class BoardCell:
 
     def to_list(self):
         return [self.count, int(self.player)]
-
-    def copy(self):
-        return BoardCell(self.player, self.count)
 
 
 class Board:
@@ -110,9 +106,9 @@ class Board:
     #  Serialization                                                      #
     # ------------------------------------------------------------------ #
 
-    def to_state(self, player: Player, move_number: int) -> dict:
-        """Return the full game state as a JSON-serializable dict.
-
+    def to_state(self, player: int, move_number: int, my_time: float, opp_time: float) -> dict:
+        """
+        Return the state format parsed by bots.
         This is what gets sent to bots via stdin.
         Format:
             {
@@ -120,7 +116,9 @@ class Board:
                 "player": 1 or 2,
                 "move_number": int,
                 "rows": 7,
-                "cols": 7
+                "cols": 7,
+                "my_time": float,
+                "opp_time": float
             }
         """
         return {
@@ -129,27 +127,14 @@ class Board:
             "move_number": move_number,
             "rows": self.rows,
             "cols": self.cols,
+            "my_time": my_time,
+            "opp_time": opp_time,
         }
 
-    def to_json(self, player: Player, move_number: int) -> str:
+    def to_json(self, player: int, move_number: int, my_time: float, opp_time: float) -> str:
         """Serialize state to a single-line JSON string."""
-        return json.dumps(self.to_state(player, move_number))
+        return json.dumps(self.to_state(player, move_number, my_time, opp_time))
 
     def snapshot(self) -> list:
         """Return a lightweight snapshot of the board for replays."""
         return [[cell.to_list() for cell in row] for row in self.grid]
-
-    def display(self):
-        """Simple text display for debugging."""
-        for i in range(self.rows):
-            parts = []
-            for j in range(self.cols):
-                c = self.grid[i][j]
-                if c.player == Player.NONE:
-                    parts.append(" . ")
-                elif c.player == Player.RED:
-                    parts.append(f"R{c.count} ")
-                else:
-                    parts.append(f"B{c.count} ")
-            print("|".join(parts))
-        print()

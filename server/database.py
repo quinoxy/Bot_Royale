@@ -7,6 +7,7 @@ import sqlite3
 import os
 import json
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "bot_royale.db")
 
@@ -25,11 +26,12 @@ def init_db():
     conn.executescript(
         """
         CREATE TABLE IF NOT EXISTS teams (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            name        TEXT    UNIQUE NOT NULL,
-            file_path   TEXT    NOT NULL,
-            uploaded_at TEXT    NOT NULL,
-            active      INTEGER DEFAULT 1
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            name          TEXT    UNIQUE NOT NULL,
+            password_hash TEXT,
+            file_path     TEXT,
+            uploaded_at   TEXT    NOT NULL,
+            active        INTEGER DEFAULT 1
         );
 
         CREATE TABLE IF NOT EXISTS matches (
@@ -59,6 +61,13 @@ def init_db():
         );
         """
     )
+    # Migration: add password_hash column if it doesn't exist (for existing DBs)
+    try:
+        conn.execute("ALTER TABLE teams ADD COLUMN password_hash TEXT")
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass  # column already exists
+
     # Seed default settings if they don't exist
     defaults = {
         "submissions_open": "1",
@@ -109,28 +118,54 @@ def get_all_settings() -> dict:
 #  Team helpers                                                       #
 # ------------------------------------------------------------------ #
 
-def add_team(name: str, file_path: str) -> bool:
-    """Register a team (or update its bot file). Returns True on success."""
+def register_team(name: str, password: str, file_path: str = None) -> bool:
+    """Register a new team with a password. Returns True on success, False if name taken."""
+    conn = get_db()
+    now = datetime.now().isoformat()
+    pw_hash = generate_password_hash(password)
+    try:
+        conn.execute(
+            """
+            INSERT INTO teams (name, password_hash, file_path, uploaded_at)
+            VALUES (?, ?, ?, ?)
+            """,
+            (name, pw_hash, file_path or "", now),
+        )
+        conn.execute(
+            "INSERT OR IGNORE INTO leaderboard (team) VALUES (?)",
+            (name,),
+        )
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False  # team name already taken
+    except sqlite3.Error as e:
+        print(f"DB error: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+def verify_team_password(name: str, password: str) -> bool:
+    """Verify a team's password. Returns True if valid."""
+    conn = get_db()
+    row = conn.execute(
+        "SELECT password_hash FROM teams WHERE name = ?", (name,)
+    ).fetchone()
+    conn.close()
+    if row is None or row["password_hash"] is None:
+        return False
+    return check_password_hash(row["password_hash"], password)
+
+
+def update_team_bot(name: str, file_path: str) -> bool:
+    """Update a team's bot file. Returns True on success."""
     conn = get_db()
     now = datetime.now().isoformat()
     try:
         conn.execute(
-            """
-            INSERT INTO teams (name, file_path, uploaded_at)
-            VALUES (?, ?, ?)
-            ON CONFLICT(name) DO UPDATE SET
-                file_path   = excluded.file_path,
-                uploaded_at = excluded.uploaded_at,
-                active      = 1
-            """,
-            (name, file_path, now),
-        )
-        # ensure leaderboard row exists
-        conn.execute(
-            """
-            INSERT OR IGNORE INTO leaderboard (team) VALUES (?)
-            """,
-            (name,),
+            "UPDATE teams SET file_path = ?, uploaded_at = ?, active = 1 WHERE name = ?",
+            (file_path, now, name),
         )
         conn.commit()
         return True
@@ -152,6 +187,26 @@ def get_all_teams():
     conn = get_db()
     rows = conn.execute(
         "SELECT * FROM teams WHERE active = 1 ORDER BY name"
+    ).fetchall()
+    conn.close()
+    return rows
+
+
+def get_teams_with_stats():
+    """Return all active teams joined with their leaderboard stats."""
+    conn = get_db()
+    rows = conn.execute(
+        """
+        SELECT t.name, t.uploaded_at,
+               COALESCE(l.wins, 0)   AS wins,
+               COALESCE(l.losses, 0) AS losses,
+               COALESCE(l.draws, 0)  AS draws,
+               COALESCE(l.points, 0) AS points
+        FROM teams t
+        LEFT JOIN leaderboard l ON t.name = l.team
+        WHERE t.active = 1
+        ORDER BY t.name
+        """
     ).fetchall()
     conn.close()
     return rows

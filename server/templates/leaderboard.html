@@ -360,9 +360,8 @@
     <nav class="nav">
         <a class="nav-brand" href="/">⚔ Bot Royale</a>
         <ul class="nav-links">
-            <li><a href="http://localhost:5000">Upload</a></li>
-            <li><a href="/" class="active">Leaderboard</a></li>
-            <li><a href="http://localhost:5002">Admin</a></li>
+            <li><a href="/">Upload</a></li>
+            <li><a href="/leaderboard" class="active">Leaderboard</a></li>
         </ul>
     </nav>
 
@@ -426,7 +425,9 @@
                         <div class="match-result">{{ m.result_desc }}</div>
                     </div>
                     <div class="match-actions">
+                        {% if logged_in_team and (logged_in_team == m.team1 or logged_in_team == m.team2) %}
                         <a class="match-link" href="/match/{{ m.id }}">View Replay →</a>
+                        {% endif %}
                         <div class="match-time">{{ m.played_at[:16] }}</div>
                     </div>
                 </div>
@@ -439,6 +440,8 @@
     </div>
 
     <script>
+        const loggedInTeam = {{ logged_in_team | tojson }};
+
         // Auto-refresh leaderboard and matches every 10 seconds
         async function refresh() {
             try {
@@ -470,7 +473,9 @@
                 if (matches.length === 0) {
                     matchList.innerHTML = '<div class="no-data">No matches played yet</div>';
                 } else {
-                    matchList.innerHTML = matches.map(m => `
+                    matchList.innerHTML = matches.map(m => {
+                        const canViewReplay = loggedInTeam && (loggedInTeam === m.team1 || loggedInTeam === m.team2);
+                        return `
                         <div class="match-row">
                             <div class="match-info">
                                 <div class="match-teams">
@@ -481,11 +486,11 @@
                                 <div class="match-result">${m.result_desc}</div>
                             </div>
                             <div class="match-actions">
-                                <a class="match-link" href="/match/${m.id}">View Replay →</a>
+                                ${canViewReplay ? `<a class="match-link" href="/match/${m.id}">View Replay →</a>` : ''}
                                 <div class="match-time">${m.played_at.substring(0, 16)}</div>
                             </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                 }
             } catch (e) {
                 console.error('Refresh failed:', e);

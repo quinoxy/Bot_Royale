@@ -12,11 +12,12 @@ import os
 import time
 import json
 import threading
+import queue
 
 from game_engine import Board, Player, MAX_MOVES
 
+# Timers will now be passed dynamically, this is just a default fallback for backwards compat if needed.
 MOVE_TIMEOUT = 2  # seconds per move
-MAX_BOT_FILE_SIZE = 100 * 1024  # 100 KB
 
 
 class BotProcess:
@@ -26,6 +27,8 @@ class BotProcess:
         self.name = name
         self.script_path = script_path
         self.process = None
+        self.output_queue = None
+        self.reader_thread = None
 
     def start(self):
         self.process = subprocess.Popen(
@@ -36,6 +39,18 @@ class BotProcess:
             text=True,
             bufsize=1,  # line-buffered
         )
+        self.output_queue = queue.Queue()
+        self.reader_thread = threading.Thread(target=self._reader_loop, daemon=True)
+        self.reader_thread.start()
+
+    def _reader_loop(self):
+        try:
+            for line in self.process.stdout:
+                self.output_queue.put(line.strip())
+        except Exception:
+            pass
+        finally:
+            self.output_queue.put("EOF_SENTINEL")
 
     def send_state(self, state_json: str):
         """Send a line of JSON to the bot's stdin."""
@@ -44,23 +59,14 @@ class BotProcess:
 
     def read_move(self, timeout: float = MOVE_TIMEOUT) -> str:
         """Read one line from the bot's stdout, with a timeout.
-        Uses threading for Windows compatibility (selectors doesn't
-        work with subprocess pipes on Windows)."""
-        result = [None]
-
-        def _read():
-            try:
-                result[0] = self.process.stdout.readline().strip()
-            except Exception:
-                result[0] = None
-
-        reader = threading.Thread(target=_read, daemon=True)
-        reader.start()
-        reader.join(timeout=timeout)
-
-        if reader.is_alive():
-            return None  # timeout
-        return result[0] if result[0] else None
+        Uses a threaded queue for Windows compatibility without leaking threads."""
+        try:
+            val = self.output_queue.get(timeout=timeout)
+            if val == "EOF_SENTINEL":
+                return None
+            return val
+        except queue.Empty:
+            return None
 
     def stop(self):
         if self.process and self.process.poll() is None:
@@ -87,9 +93,9 @@ def parse_move(move_str: str):
         return None
 
 
-def run_match(team1_name: str, team1_path: str, team2_name: str, team2_path: str, move_timeout: float = MOVE_TIMEOUT):
+def run_match(team1_name: str, team1_path: str, team2_name: str, team2_path: str, max_moves: int = MAX_MOVES, time_bank: float = 60.0):
     """
-    Run a full match between two bots.
+    Run a full match between two bots using a global timebank.
 
     Returns:
         dict with keys:
@@ -123,18 +129,26 @@ def run_match(team1_name: str, team1_path: str, team2_name: str, team2_path: str
             "moves": moves,
         }
 
+    # Initialize global timebanks
+    time_bank_p1 = time_bank
+    time_bank_p2 = time_bank
+
     result = None
 
     try:
-        for move_number in range(MAX_MOVES):
+        for move_number in range(max_moves):
             if move_number % 2 == 0:
                 current_player = Player.RED
                 current_bot = bot1
                 current_name = team1_name
+                current_time_remaining = time_bank_p1
+                opp_time_remaining = time_bank_p2
             else:
                 current_player = Player.BLUE
                 current_bot = bot2
                 current_name = team2_name
+                current_time_remaining = time_bank_p2
+                opp_time_remaining = time_bank_p1
 
             # Check if bot is still running
             if not current_bot.is_alive():
@@ -145,8 +159,8 @@ def run_match(team1_name: str, team1_path: str, team2_name: str, team2_path: str
                 }
                 break
 
-            # Send board state to current bot
-            state_json = board.to_json(current_player, move_number)
+            # Send board state and time arrays to current bot
+            state_json = board.to_json(current_player, move_number, current_time_remaining, opp_time_remaining)
             try:
                 current_bot.send_state(state_json)
             except (BrokenPipeError, OSError):
@@ -157,12 +171,23 @@ def run_match(team1_name: str, team1_path: str, team2_name: str, team2_path: str
                 }
                 break
 
-            # Read move from bot
-            move_str = current_bot.read_move(move_timeout)
-            if move_str is None:
+            # Read move from bot, subtracting exactly elapsed time
+            start_time = time.time()
+            move_str = current_bot.read_move(current_time_remaining)
+            elapsed_time = time.time() - start_time
+            
+            # Apply time deductions
+            if move_number % 2 == 0:
+                time_bank_p1 -= elapsed_time
+                current_time_remaining = time_bank_p1
+            else:
+                time_bank_p2 -= elapsed_time
+                current_time_remaining = time_bank_p2
+                
+            if current_time_remaining <= 0 or move_str is None:
                 result = {
                     "winner": f"DQ:{current_name}",
-                    "result_desc": f"{current_name} timed out (>{move_timeout}s)",
+                    "result_desc": f"{current_name} ran out of time! (Bank: {current_time_remaining:.2f}s left)",
                     "moves": moves,
                 }
                 break
@@ -213,7 +238,7 @@ def run_match(team1_name: str, team1_path: str, team2_name: str, team2_path: str
         if result is None:
             result = {
                 "winner": None,
-                "result_desc": f"Draw — game reached {MAX_MOVES} moves without a winner",
+                "result_desc": f"Draw — game reached {max_moves} moves without a winner",
                 "moves": moves,
             }
 

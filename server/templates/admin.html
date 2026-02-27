@@ -540,9 +540,9 @@
     <nav class="nav">
         <a class="nav-brand" href="/">⚔ Bot Royale</a>
         <ul class="nav-links">
-            <li><a href="http://localhost:5000">Upload</a></li>
-            <li><a href="http://localhost:5001">Leaderboard</a></li>
-            <li><a href="/" class="active">Admin</a></li>
+            <li><a href="/">Upload</a></li>
+            <li><a href="/leaderboard">Leaderboard</a></li>
+            <li><a href="/admin" class="active">Admin</a></li>
         </ul>
     </nav>
 
@@ -591,7 +591,7 @@
             <!-- Settings -->
             <div class="card">
                 <h2>⚙ Platform Settings</h2>
-                <form method="POST" action="/settings">
+                <form method="POST" action="/admin/settings">
                     <div class="setting-row">
                         <div>
                             <div class="setting-label">Submissions Open</div>
@@ -630,19 +630,34 @@
                 </form>
             </div>
 
+            <!-- Tournament Runner (Now Queue Control) -->
+            <div class="card p-4">
+                <div class="card-title">Live Match Queue</div>
+                <div class="form-group">
+                    <label>Global Queue Processing</label>
+                    <div id="queue-status-indicator" style="font-weight: bold; margin-bottom: 5px;">Checking...</div>
+                    <div style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 15px;">
+                        Matches waiting: <span id="queue-length" style="color: var(--primary);">0</span>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-warning" id="queue-toggle-btn" onclick="toggleQueue()">Toggle
+                            Play/Pause</button>
+                        <button class="btn btn-danger" onclick="clearQueue()">Clear Queue</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Upcoming Matches (Next 5)</label>
+                    <ul id="queue-list"
+                        style="background: var(--bg); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.9em; color: var(--text-muted);">
+                        <li>No matches in queue.</li>
+                    </ul>
+                </div>
+            </div>
             <!-- Quick Actions -->
             <div class="card">
                 <h2>🚀 Quick Actions</h2>
                 <div class="action-grid">
-                    <div class="action-card">
-                        <p>Run all-vs-all matches</p>
-                        <form method="POST" action="/run-tournament" style="display:inline;">
-                            <button type="submit" class="btn btn-primary btn-sm" {% if tournament_status.running
-                                %}disabled{% endif %}>
-                                {% if tournament_status.running %}Running…{% else %}▶ Run Tournament{% endif %}
-                            </button>
-                        </form>
-                    </div>
                     <div class="action-card">
                         <p>Reset all scores to 0</p>
                         <button class="btn btn-warning btn-sm" onclick="confirmAction('reset-lb')">↺ Reset
@@ -659,16 +674,6 @@
                             Reset</button>
                     </div>
                 </div>
-
-                {% if tournament_status.running %}
-                <div style="margin-top: 1rem;">
-                    <span class="running-badge"><span class="running-dot"></span> Tournament Running</span>
-                </div>
-                {% endif %}
-
-                {% if tournament_status.output %}
-                <div class="tournament-output" id="tournamentOutput">{{ tournament_status.output }}</div>
-                {% endif %}
             </div>
         </div>
 
@@ -700,7 +705,7 @@
                         </td>
                         <td style="color: var(--text-secondary); font-size: 0.85rem;">{{ team.uploaded_at[:16] }}</td>
                         <td>
-                            <form method="POST" action="/team/{{ team.name }}/toggle" style="display: inline;">
+                            <form method="POST" action="/admin/team/{{ team.name }}/toggle" style="display: inline;">
                                 {% if team.active %}
                                 <input type="hidden" name="action" value="deactivate">
                                 <button type="submit" class="btn btn-warning btn-sm">Deactivate</button>
@@ -741,12 +746,12 @@
             'reset-lb': {
                 title: 'Reset Leaderboard?',
                 desc: 'All team scores will be set to zero. This cannot be undone.',
-                form: '/reset-leaderboard'
+                form: '/admin/reset-leaderboard'
             },
             'clear-matches': {
                 title: 'Clear All Matches?',
                 desc: 'All match history and replays will be permanently deleted.',
-                form: '/clear-matches'
+                form: '/admin/clear-matches'
             },
             'full-reset': {
                 title: 'Full Reset?',
@@ -775,8 +780,8 @@
 
             if (pendingAction === 'full-reset') {
                 // Submit both reset-leaderboard and clear-matches
-                fetch('/reset-leaderboard', { method: 'POST' })
-                    .then(() => fetch('/clear-matches', { method: 'POST' }))
+                fetch('/admin/reset-leaderboard', { method: 'POST', credentials: 'include' })
+                    .then(() => fetch('/admin/clear-matches', { method: 'POST', credentials: 'include' }))
                     .then(() => window.location.reload());
             } else {
                 const form = document.createElement('form');
@@ -804,6 +809,63 @@
             } catch (e) { }
         }, 3000);
         {% endif %}
+
+        // Queue Control Logic
+        async function fetchQueueStatus() {
+            try {
+                const res = await fetch('/admin/queue-status');
+                const data = await res.json();
+
+                const indicator = document.getElementById('queue-status-indicator');
+                if (data.paused) {
+                    indicator.textContent = '⏸ PAUSED';
+                    indicator.style.color = '#ffab00'; // Warning color
+                } else {
+                    indicator.textContent = '▶ RUNNING';
+                    indicator.style.color = 'var(--success)';
+                }
+
+                document.getElementById('queue-length').textContent = data.length;
+
+                const list = document.getElementById('queue-list');
+                if (data.next_matches && data.next_matches.length > 0) {
+                    list.innerHTML = '';
+                    data.next_matches.forEach(m => {
+                        const li = document.createElement('li');
+                        li.textContent = m[0] + " vs " + m[1];
+                        list.appendChild(li);
+                    });
+                } else {
+                    list.innerHTML = '<li>No matches in queue.</li>';
+                }
+            } catch (e) {
+                console.error("Failed to fetch queue status:", e);
+            }
+        }
+
+        async function toggleQueue() {
+            try {
+                await fetch('/admin/queue-toggle', { method: 'POST' });
+                fetchQueueStatus();
+            } catch (e) {
+                console.error("Failed to toggle queue:", e);
+            }
+        }
+
+        async function clearQueue() {
+            if (confirm("Are you sure you want to clear the match queue? All pending matches will be deleted.")) {
+                try {
+                    await fetch('/admin/queue-clear', { method: 'POST' });
+                    fetchQueueStatus();
+                } catch (e) {
+                    console.error("Failed to clear queue:", e);
+                }
+            }
+        }
+
+        // Poll queue status every 2 seconds
+        setInterval(fetchQueueStatus, 2000);
+        fetchQueueStatus(); // initial fetch
     </script>
 </body>
 

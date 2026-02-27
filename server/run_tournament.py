@@ -47,9 +47,10 @@ def run_single_match(team1_name: str, team2_name: str):
 
     # Read configurable settings
     move_timeout = float(get_setting("move_timeout", "2"))
+    max_moves = int(get_setting("max_moves", "1000"))
 
     start = time.time()
-    result = run_match(team1_name, t1["file_path"], team2_name, t2["file_path"], move_timeout=move_timeout)
+    result = run_match(team1_name, t1["file_path"], team2_name, t2["file_path"], move_timeout=move_timeout, max_moves=max_moves)
     elapsed = time.time() - start
 
     print(f"\n{result['result_desc']}")
@@ -73,12 +74,13 @@ def run_round_robin():
 
     # Read configurable settings
     move_timeout = float(get_setting("move_timeout", "2"))
+    max_moves = int(get_setting("max_moves", "1000"))
 
     for i, (t1, t2) in enumerate(matchups, 1):
         print(f"[{i}/{total}] {t1['name']} vs {t2['name']} ... ", end="", flush=True)
 
         start = time.time()
-        result = run_match(t1["name"], t1["file_path"], t2["name"], t2["file_path"], move_timeout=move_timeout)
+        result = run_match(t1["name"], t1["file_path"], t2["name"], t2["file_path"], move_timeout=move_timeout, max_moves=max_moves)
         elapsed = time.time() - start
 
         # Short summary
