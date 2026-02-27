@@ -184,10 +184,18 @@ def run_match(team1_name: str, team1_path: str, team2_name: str, team2_path: str
                 time_bank_p2 -= elapsed_time
                 current_time_remaining = time_bank_p2
                 
-            if current_time_remaining <= 0 or move_str is None:
+            if current_time_remaining <= 0:
                 result = {
                     "winner": f"DQ:{current_name}",
                     "result_desc": f"{current_name} ran out of time! (Bank: {current_time_remaining:.2f}s left)",
+                    "moves": moves,
+                }
+                break
+
+            if move_str is None:
+                result = {
+                    "winner": f"DQ:{current_name}",
+                    "result_desc": f"{current_name} bot crashed or produced no output (Bank: {current_time_remaining:.2f}s left)",
                     "moves": moves,
                 }
                 break
