@@ -1,4 +1,5 @@
 
+import json
 import pygame
 from constants import *
 from draw import draw_intermediaries
@@ -42,6 +43,27 @@ class Board:
                 elif cell.player == Player.BLUE:
                     row_display.append(f'B{cell.count}')
             print('|'.join(row_display))
+
+    def serialize(self, current_player, move_number, my_time=1000, opp_time=1000):
+        """Serialize board state to JSON string for bot communication."""
+        cells = []
+        for i in range(self.rows):
+            row = []
+            for j in range(self.cols):
+                cell = self.board[i][j]
+                row.append([cell.count, cell.player.value])
+            cells.append(row)
+
+        state = {
+            "rows": self.rows,
+            "cols": self.cols,
+            "player": current_player.value,
+            "move_number": move_number,
+            "my_time": my_time,
+            "opp_time": opp_time,
+            "board": cells
+        }
+        return json.dumps(state)
 
     def makeMove(self, x, y, player):
         

@@ -121,7 +121,7 @@ class Board:
         return red_count == 0 or blue_count == 0
     
     def evaluate(self, player):
-        pass
+        return 10
     def getLegalMoves(self, player):
         """Get all legal moves for the given player"""
         moves = []
