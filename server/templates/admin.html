@@ -605,16 +605,7 @@
                             </label>
                         </div>
                     </div>
-                    <div class="setting-row">
-                        <div>
-                            <div class="setting-label">Move Timeout</div>
-                            <div class="setting-desc">Seconds per move (1–30)</div>
-                        </div>
-                        <div class="setting-input">
-                            <input type="number" name="move_timeout" value="{{ settings.move_timeout }}" min="1"
-                                max="30">
-                        </div>
-                    </div>
+
                     <div class="setting-row">
                         <div>
                             <div class="setting-label">Max Moves</div>
@@ -622,6 +613,15 @@
                         </div>
                         <div class="setting-input">
                             <input type="number" name="max_moves" value="{{ settings.max_moves }}" min="10" max="10000">
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div>
+                            <div class="setting-label">Time Bank</div>
+                            <div class="setting-desc">Total seconds per player (10–300)</div>
+                        </div>
+                        <div class="setting-input">
+                            <input type="number" name="time_bank" value="{{ settings.time_bank }}" min="10" max="300">
                         </div>
                     </div>
                     <div style="margin-top: 1.25rem;">

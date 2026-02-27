@@ -71,8 +71,8 @@ def init_db():
     # Seed default settings if they don't exist
     defaults = {
         "submissions_open": "1",
-        "move_timeout": "2",
         "max_moves": "1000",
+        "time_bank": "60",
     }
     for key, value in defaults.items():
         conn.execute(

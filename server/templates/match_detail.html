@@ -487,10 +487,21 @@
                 el.classList.toggle('active', i === currentMove);
             });
 
-            // Scroll active entry into view
+            // Scroll active entry into view within the log container only
             if (currentMove >= 0) {
                 const el = document.getElementById(`log-${currentMove}`);
-                if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                const container = document.getElementById('moveLog');
+                if (el && container) {
+                    const elTop = el.offsetTop - container.offsetTop;
+                    const elBottom = elTop + el.offsetHeight;
+                    const scrollTop = container.scrollTop;
+                    const containerHeight = container.clientHeight;
+                    if (elTop < scrollTop) {
+                        container.scrollTop = elTop;
+                    } else if (elBottom > scrollTop + containerHeight) {
+                        container.scrollTop = elBottom - containerHeight;
+                    }
+                }
             }
 
             // Update button states

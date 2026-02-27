@@ -5,6 +5,7 @@ Slightly better than first-valid since it's unpredictable.
 """
 import json
 import random
+import sys
 
 def get_random_move(state):
     """
@@ -24,9 +25,18 @@ def get_random_move(state):
     for r in range(rows):
         for c in range(cols):
             count, owner = board[r][c]
-            if owner == 0 or owner == me:
+            if owner == 0 or owner == player:
                 valid_moves.append((r, c))
 
     # Pick a random valid move
     r, c = random.choice(valid_moves)
     print(f"{r} {c}", flush=True)
+
+# Game loop: read state from stdin, respond with a move
+while True:
+    try:
+        line = input()
+        state = json.loads(line)
+        get_random_move(state)
+    except EOFError:
+        break

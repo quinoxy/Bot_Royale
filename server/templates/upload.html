@@ -503,30 +503,32 @@
         <!-- Bot writing rules -->
         <div class="rules-card">
             <h2>📋 How to Write Your Bot</h2>
-            <p>Your bot communicates via <strong>stdin/stdout</strong>. On each turn:</p>
+            <p>Your bot is a Python script that communicates via <strong>stdin/stdout</strong> in a loop. On each turn:
+            </p>
             <ul>
-                <li>Read one line from stdin → JSON with the board state</li>
+                <li>Read one line from stdin → JSON with the board state &amp; time info</li>
                 <li>Print one line to stdout → <code>row col</code> (your move)</li>
             </ul>
-            <p style="margin-top: 1rem;"><strong>Board state JSON format:</strong></p>
+            <p style="margin-top: 1rem;"><strong>Board state JSON format (received each turn):</strong></p>
             <pre><code>{
   "board": [[count, owner], ...],  // 7×7 grid
   "player": 1,                     // 1=RED, 2=BLUE (you)
   "move_number": 5,
-  "rows": 7, "cols": 7
+  "rows": 7, "cols": 7,
+  "my_time": 58.3,                 // your remaining time (seconds)
+  "opp_time": 55.1                 // opponent's remaining time
 }
-// owner: 0=NONE, 1=RED, 2=BLUE</code></pre>
+// owner: 0=EMPTY, 1=RED, 2=BLUE</code></pre>
             <p style="margin-top: 1rem;"><strong>Example bot (plays first valid cell):</strong></p>
-            <pre><code>import json, sys
+            <pre><code>import json
 
 while True:
-    line = input()
-    state = json.loads(line)
+    state = json.loads(input())
     me = state["player"]
     board = state["board"]
 
-    for r in range(7):
-        for c in range(7):
+    for r in range(state["rows"]):
+        for c in range(state["cols"]):
             owner = board[r][c][1]
             if owner == 0 or owner == me:
                 print(f"{r} {c}", flush=True)
@@ -537,10 +539,11 @@ while True:
 
             <p style="margin-top: 1rem;"><strong>Rules:</strong></p>
             <ul>
-                <li>⏱ You have <strong>2 seconds</strong> per move</li>
-                <li>❌ Invalid move = disqualification</li>
-                <li>💥 Crash or timeout = disqualification</li>
-                <li>🏆 Win by eliminating all opponent pieces</li>
+                <li>⏱ Each player has a <strong>60-second time bank</strong> for the entire game (no per-move limit —
+                    spend your time wisely)</li>
+                <li>❌ Invalid move or bot crash → <strong>opponent wins by default</strong></li>
+                <li>💥 Running out of time → <strong>opponent wins by default</strong></li>
+                <li>🏆 Win by eliminating all opponent pieces via chain reactions</li>
             </ul>
         </div>
 

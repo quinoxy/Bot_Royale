@@ -11,7 +11,6 @@ Single Flask application serving all pages:
 import os
 import sys
 import json
-import json
 import subprocess
 import threading
 import functools
@@ -55,6 +54,7 @@ from database import (
     delete_all_matches,
     get_match_count,
     get_team_count,
+    record_match,
 )
 
 from bot_runner import run_match
@@ -101,11 +101,11 @@ def queue_worker():
 
             # Run the match
             try:
-                move_timeout = float(get_setting("move_timeout", "60.0"))
+                tb = float(get_setting("time_bank", "60"))
             except ValueError:
-                move_timeout = 60.0
+                tb = 60.0
 
-            result = run_match(team1_name, t1["file_path"], team2_name, t2["file_path"], time_bank=move_timeout)
+            result = run_match(team1_name, t1["file_path"], team2_name, t2["file_path"], time_bank=tb)
             record_match(team1_name, team2_name, result["winner"], result["result_desc"], result["moves"])
         except Exception as e:
             print(f"Queue worker error: {e}")
@@ -495,13 +495,6 @@ def admin_update_settings():
     submissions = request.form.get("submissions_open", "0")
     set_setting("submissions_open", submissions)
 
-    move_timeout = request.form.get("move_timeout", "2")
-    try:
-        timeout_val = max(1, min(30, int(move_timeout)))
-        set_setting("move_timeout", str(timeout_val))
-    except ValueError:
-        flash("Invalid move timeout value.", "error")
-        return redirect(url_for("admin_panel"))
 
     max_moves = request.form.get("max_moves", "1000")
     try:
@@ -509,6 +502,14 @@ def admin_update_settings():
         set_setting("max_moves", str(moves_val))
     except ValueError:
         flash("Invalid max moves value.", "error")
+        return redirect(url_for("admin_panel"))
+
+    time_bank = request.form.get("time_bank", "60")
+    try:
+        tb_val = max(10, min(300, int(time_bank)))
+        set_setting("time_bank", str(tb_val))
+    except ValueError:
+        flash("Invalid time bank value.", "error")
         return redirect(url_for("admin_panel"))
 
     flash("Settings updated successfully!", "success")

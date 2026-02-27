@@ -5,6 +5,7 @@ Strategy: Prioritizes cells that are 1 away from their critical mass.
 """
 import json
 import random
+import sys
 
 def get_critical_mass(r, c, rows, cols):
     """Calculate the explosion threshold for a cell."""
@@ -36,12 +37,12 @@ def get_move(state):
     for r in range(rows):
         for c in range(cols):
             count, owner = board[r][c]
-            if owner == 0 or owner == me:
+            if owner == 0 or owner == player:
                 crit = get_critical_mass(r, c, rows, cols)
-                if owner == me and count == crit - 1:
+                if owner == player and count == crit - 1:
                     # One away from exploding — highest priority
                     best_moves.append((r, c))
-                elif owner == me:
+                elif owner == player:
                     good_moves.append((r, c))
                 else:
                     ok_moves.append((r, c))
@@ -55,3 +56,12 @@ def get_move(state):
         r, c = random.choice(ok_moves)
 
     print(f"{r} {c}", flush=True)
+
+# Game loop: read state from stdin, respond with a move
+while True:
+    try:
+        line = input()
+        state = json.loads(line)
+        get_move(state)
+    except EOFError:
+        break
