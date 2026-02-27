@@ -8,7 +8,8 @@ import os
 import sys
 import subprocess
 import threading
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+import functools
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response
 
 sys.path.insert(0, os.path.dirname(__file__))
 from database import (
@@ -27,13 +28,43 @@ from database import (
 )
 
 app = Flask(__name__)
-app.secret_key = "bot-royale-admin-secret-key"
+app.secret_key = os.environ.get("ADMIN_SECRET_KEY", "bot-royale-admin-secret-key")
+
+# Admin credentials (change these or set via environment variables)
+ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
+ADMIN_PASS = os.environ.get("ADMIN_PASS", "admin")
 
 # Track tournament status
 tournament_status = {"running": False, "output": ""}
 
 
+def check_auth(username, password):
+    """Verify admin credentials."""
+    return username == ADMIN_USER and password == ADMIN_PASS
+
+
+def authenticate():
+    """Send a 401 response to prompt for credentials."""
+    return Response(
+        "Access denied. Please provide valid admin credentials.",
+        401,
+        {"WWW-Authenticate": 'Basic realm="Bot Royale Admin"'},
+    )
+
+
+def require_admin(f):
+    """Decorator to require admin login on a route."""
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
+
+
 @app.route("/")
+@require_admin
 def index():
     settings = get_all_settings()
     teams = get_all_teams_including_inactive()
@@ -56,6 +87,7 @@ def index():
 
 
 @app.route("/settings", methods=["POST"])
+@require_admin
 def update_settings():
     # Toggle submissions
     submissions = request.form.get("submissions_open", "0")
@@ -84,6 +116,7 @@ def update_settings():
 
 
 @app.route("/team/<name>/toggle", methods=["POST"])
+@require_admin
 def toggle_team(name):
     action = request.form.get("action", "deactivate")
     if action == "activate":
@@ -96,6 +129,7 @@ def toggle_team(name):
 
 
 @app.route("/reset-leaderboard", methods=["POST"])
+@require_admin
 def reset_lb():
     reset_leaderboard()
     flash("Leaderboard has been reset to zero.", "success")
@@ -103,6 +137,7 @@ def reset_lb():
 
 
 @app.route("/clear-matches", methods=["POST"])
+@require_admin
 def clear_matches():
     delete_all_matches()
     flash("All match history has been cleared.", "success")
@@ -110,6 +145,7 @@ def clear_matches():
 
 
 @app.route("/run-tournament", methods=["POST"])
+@require_admin
 def run_tournament():
     if tournament_status["running"]:
         flash("A tournament is already running!", "error")
@@ -141,6 +177,7 @@ def run_tournament():
 
 
 @app.route("/api/tournament-status")
+@require_admin
 def api_tournament_status():
     return jsonify(tournament_status)
 
