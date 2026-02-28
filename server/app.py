@@ -617,6 +617,6 @@ if __name__ == "__main__":
     init_db()
     print("=" * 50)
     print("  Bot Royale — Unified Server")
-    print("  Running on http://0.0.0.0:5001")
+    print("  Running on http://0.0.0.0:5000")
     print("=" * 50)
-    app.run(host="0.0.0.0", port=5001, debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=False)
