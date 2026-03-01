@@ -90,10 +90,6 @@
 
         .nav-links a:hover,
         .nav-links a.active {
-            color: var(--text-primary);
-        }
-
-        .nav-links a.active {
             color: var(--accent);
         }
 
@@ -127,37 +123,17 @@
             font-size: 1.1rem;
         }
 
-        .live-badge {
+        .final-badge {
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
-            background: rgba(0, 200, 83, 0.12);
-            color: var(--success);
+            background: rgba(233, 69, 96, 0.12);
+            color: var(--accent);
             padding: 0.3rem 0.8rem;
             border-radius: 20px;
             font-size: 0.8rem;
             font-weight: 600;
             margin-top: 0.75rem;
-        }
-
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--success);
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.3;
-            }
         }
 
         /* Leaderboard card */
@@ -209,6 +185,10 @@
             background: var(--bg-card-hover);
         }
 
+        .lb-table tbody tr.clickable {
+            cursor: pointer;
+        }
+
         .rank {
             font-weight: 800;
             font-size: 1.1rem;
@@ -230,26 +210,6 @@
             font-weight: 700;
         }
 
-        .team-name a {
-            color: var(--text-primary);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .team-name a:hover {
-            color: var(--accent);
-        }
-
-        .points-badge {
-            background: linear-gradient(135deg, var(--accent), #c23152);
-            color: white;
-            padding: 0.3rem 0.75rem;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            display: inline-block;
-        }
-
         .stat {
             text-align: center;
         }
@@ -264,241 +224,213 @@
             font-weight: 600;
         }
 
-        .stat-draw {
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        /* Match history */
-        .match-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            border-bottom: 1px solid rgba(42, 42, 64, 0.5);
-            transition: background 0.2s;
-        }
-
-        .match-row:hover {
-            background: var(--bg-card-hover);
-        }
-
-        .match-row:last-child {
-            border-bottom: none;
-        }
-
-        .match-teams {
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .match-teams .vs {
-            color: var(--text-secondary);
-            font-weight: 400;
-            margin: 0 0.5rem;
-        }
-
-        .match-teams a {
-            color: var(--text-primary);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .match-teams a:hover {
-            color: var(--accent);
-        }
-
-        .match-winner {
-            color: var(--accent);
+        .points-badge {
+            background: linear-gradient(135deg, var(--accent), #c23152);
+            color: white;
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
             font-weight: 700;
+            font-size: 0.9rem;
+            display: inline-block;
         }
 
-        .match-result {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+        .crown {
+            font-size: 1.4rem;
+            margin-right: 0.3rem;
         }
 
-        .match-time {
+        /* Podium section */
+        .podium {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            padding: 1.5rem 0;
+        }
+
+        .podium-item {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            min-width: 160px;
+            transition: transform 0.2s;
+        }
+
+        .podium-item:hover {
+            transform: translateY(-4px);
+        }
+
+        .podium-item.first {
+            border-color: rgba(255, 215, 0, 0.4);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(233, 69, 96, 0.08));
+            order: 2;
+            padding-bottom: 2.5rem;
+        }
+
+        .podium-item.second {
+            border-color: rgba(192, 192, 192, 0.3);
+            order: 1;
+        }
+
+        .podium-item.third {
+            border-color: rgba(205, 127, 50, 0.3);
+            order: 3;
+        }
+
+        .podium-rank {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+        }
+
+        .podium-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+            word-break: break-word;
+        }
+
+        .podium-stats {
             font-size: 0.8rem;
             color: var(--text-secondary);
         }
 
-        .match-link {
+        .podium-wins {
+            color: var(--success);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        th.stat {
+            text-align: center;
+        }
+
+        .view-games-link {
             color: var(--accent);
             text-decoration: none;
             font-weight: 600;
             font-size: 0.85rem;
-            transition: opacity 0.2s;
+            white-space: nowrap;
         }
 
-        .match-link:hover {
-            opacity: 0.7;
+        .view-games-link:hover {
+            text-decoration: underline;
         }
 
-        .no-data {
-            text-align: center;
-            color: var(--text-secondary);
-            padding: 2rem;
-            font-style: italic;
-        }
+        @media (max-width: 700px) {
+            .header h1 {
+                font-size: 2rem;
+            }
 
-        .match-info {
-            flex: 1;
-        }
+            .podium {
+                flex-direction: column;
+                align-items: center;
+            }
 
-        .match-actions {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.3rem;
+            .podium-item {
+                order: unset !important;
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .lb-table th, .lb-table td {
+                padding: 0.6rem 0.5rem;
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- Navigation -->
     <nav class="nav">
         <a class="nav-brand" href="/">⚔ Bot Royale</a>
         <ul class="nav-links">
-            <li><a href="/">Upload</a></li>
-            <li><a href="/leaderboard" class="active">Leaderboard</a></li>
+            <li><a href="/" class="active">Leaderboard</a></li>
+            <li><a href="/replays">Game Replays</a></li>
+            <li><a href="/bots">Bot Code</a></li>
         </ul>
     </nav>
 
     <div class="container">
         <div class="header">
-            <h1>🏆 Leaderboard</h1>
+            <h1>🏆 Final Standings</h1>
             <p>Bot Royale — Chain Reaction AI Battle</p>
-            <div class="live-badge">
-                <div class="live-dot"></div> Live — auto-refreshes every 10s
+            <div class="final-badge">
+                🏁 Tournament Complete
             </div>
         </div>
 
-        <!-- Leaderboard -->
+        <!-- Podium for top 3 -->
+        {% if leaderboard|length >= 3 %}
+        <div class="podium">
+            <div class="podium-item second">
+                <div class="podium-rank" style="color: var(--silver);">🥈</div>
+                <div class="podium-name">{{ leaderboard[1][0] }}</div>
+                <div class="podium-wins">{{ leaderboard[1][1].wins }}W</div>
+                <div class="podium-stats">{{ leaderboard[1][1].losses }}L</div>
+            </div>
+            <div class="podium-item first">
+                <div class="podium-rank" style="color: var(--gold);">👑</div>
+                <div class="podium-name">{{ leaderboard[0][0] }}</div>
+                <div class="podium-wins">{{ leaderboard[0][1].wins }}W</div>
+                <div class="podium-stats">{{ leaderboard[0][1].losses }}L</div>
+            </div>
+            <div class="podium-item third">
+                <div class="podium-rank" style="color: var(--bronze);">🥉</div>
+                <div class="podium-name">{{ leaderboard[2][0] }}</div>
+                <div class="podium-wins">{{ leaderboard[2][1].wins }}W</div>
+                <div class="podium-stats">{{ leaderboard[2][1].losses }}L</div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Full leaderboard table -->
         <div class="card">
-            <h2>📊 Rankings</h2>
-            <table class="lb-table" id="leaderboardTable">
+            <h2>📊 Full Rankings</h2>
+            <table class="lb-table">
                 <thead>
                     <tr>
                         <th>Rank</th>
                         <th>Team</th>
                         <th class="stat">Wins</th>
                         <th class="stat">Losses</th>
-                        <th class="stat">Draws</th>
-                        <th>Points</th>
+                        <th class="stat">Win Rate</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% if rankings %}
-                    {% for r in rankings %}
-                    <tr>
-                        <td><span class="rank rank-{{ loop.index }}">{{ loop.index }}</span></td>
-                        <td class="team-name"><a href="/team/{{ r.team }}">{{ r.team }}</a></td>
-                        <td class="stat stat-win">{{ r.wins }}</td>
-                        <td class="stat stat-loss">{{ r.losses }}</td>
-                        <td class="stat stat-draw">{{ r.draws }}</td>
-                        <td><span class="points-badge">{{ r.points }}</span></td>
+                    {% for name, stats in leaderboard %}
+                    {% set total = stats.wins + stats.losses %}
+                    {% set winrate = (stats.wins / total * 100) if total > 0 else 0 %}
+                    <tr class="clickable" onclick="window.location='/replays?team={{ name }}'">
+                        <td>
+                            <span class="rank rank-{{ loop.index }}">
+                                {% if loop.index == 1 %}<span class="crown">👑</span>{% endif %}
+                                {{ loop.index }}
+                            </span>
+                        </td>
+                        <td class="team-name">{{ name }}</td>
+                        <td class="stat stat-win">{{ stats.wins }}</td>
+                        <td class="stat stat-loss">{{ stats.losses }}</td>
+                        <td class="stat">
+                            <span class="points-badge">{{ "%.0f" | format(winrate) }}%</span>
+                        </td>
+                        <td>
+                            <a class="view-games-link" href="/replays?team={{ name }}">View Games →</a>
+                        </td>
                     </tr>
                     {% endfor %}
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="no-data">No teams yet — matches haven't started</td>
-                    </tr>
-                    {% endif %}
                 </tbody>
             </table>
         </div>
-
-        <!-- Recent matches -->
-        <div class="card">
-            <h2>⚔ Recent Matches</h2>
-            <div id="matchList">
-                {% if matches %}
-                {% for m in matches %}
-                <div class="match-row">
-                    <div class="match-info">
-                        <div class="match-teams">
-                            <a href="/team/{{ m.team1 }}">{{ m.team1 }}</a>
-                            <span class="vs">vs</span>
-                            <a href="/team/{{ m.team2 }}">{{ m.team2 }}</a>
-                        </div>
-                        <div class="match-result">{{ m.result_desc }}</div>
-                    </div>
-                    <div class="match-actions">
-                        {% if logged_in_team and (logged_in_team == m.team1 or logged_in_team == m.team2) %}
-                        <a class="match-link" href="/match/{{ m.id }}">View Replay →</a>
-                        {% endif %}
-                        <div class="match-time">{{ m.played_at[:16] }}</div>
-                    </div>
-                </div>
-                {% endfor %}
-                {% else %}
-                <div class="no-data">No matches played yet</div>
-                {% endif %}
-            </div>
-        </div>
     </div>
-
-    <script>
-        const loggedInTeam = {{ logged_in_team | tojson }};
-
-        // Auto-refresh leaderboard and matches every 10 seconds
-        async function refresh() {
-            try {
-                // Refresh leaderboard
-                const lbRes = await fetch('/api/leaderboard');
-                const rankings = await lbRes.json();
-                const tbody = document.querySelector('#leaderboardTable tbody');
-
-                if (rankings.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="no-data">No teams yet</td></tr>';
-                } else {
-                    tbody.innerHTML = rankings.map(r => `
-                        <tr>
-                            <td><span class="rank rank-${r.rank}">${r.rank}</span></td>
-                            <td class="team-name"><a href="/team/${encodeURIComponent(r.team)}">${r.team}</a></td>
-                            <td class="stat stat-win">${r.wins}</td>
-                            <td class="stat stat-loss">${r.losses}</td>
-                            <td class="stat stat-draw">${r.draws}</td>
-                            <td><span class="points-badge">${r.points}</span></td>
-                        </tr>
-                    `).join('');
-                }
-
-                // Refresh matches
-                const mRes = await fetch('/api/matches');
-                const matches = await mRes.json();
-                const matchList = document.getElementById('matchList');
-
-                if (matches.length === 0) {
-                    matchList.innerHTML = '<div class="no-data">No matches played yet</div>';
-                } else {
-                    matchList.innerHTML = matches.map(m => {
-                        const canViewReplay = loggedInTeam && (loggedInTeam === m.team1 || loggedInTeam === m.team2);
-                        return `
-                        <div class="match-row">
-                            <div class="match-info">
-                                <div class="match-teams">
-                                    <a href="/team/${encodeURIComponent(m.team1)}">${m.team1}</a>
-                                    <span class="vs">vs</span>
-                                    <a href="/team/${encodeURIComponent(m.team2)}">${m.team2}</a>
-                                </div>
-                                <div class="match-result">${m.result_desc}</div>
-                            </div>
-                            <div class="match-actions">
-                                ${canViewReplay ? `<a class="match-link" href="/match/${m.id}">View Replay →</a>` : ''}
-                                <div class="match-time">${m.played_at.substring(0, 16)}</div>
-                            </div>
-                        </div>
-                    `}).join('');
-                }
-            } catch (e) {
-                console.error('Refresh failed:', e);
-            }
-        }
-
-        setInterval(refresh, 10000);
-    </script>
 </body>
 
 </html>

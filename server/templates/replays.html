@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Royale — Game Replays</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #1e1e35;
+            --accent: #e94560;
+            --accent-glow: rgba(233, 69, 96, 0.3);
+            --text-primary: #eaeaea;
+            --text-secondary: #8888a0;
+            --border: #2a2a40;
+            --success: #00c853;
+            --error: #ff5252;
+            --red-color: #ff4757;
+            --blue-color: #3498db;
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(233, 69, 96, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(15, 52, 96, 0.15) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .nav {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .nav-brand {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--accent);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-top: 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #e94560, #3498db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Search / filter bar */
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+        }
+
+        /* Stats summary */
+        .stats-summary {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-pill strong {
+            color: var(--text-primary);
+        }
+
+        /* Game cards */
+        .games-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .game-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .game-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+            transform: translateX(4px);
+        }
+
+        .game-main {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .game-id {
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            min-width: 45px;
+        }
+
+        .game-teams {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .team-red { color: var(--red-color); }
+        .team-blue { color: var(--blue-color); }
+
+        .vs {
+            color: var(--text-secondary);
+            font-weight: 400;
+            font-size: 0.85rem;
+        }
+
+        .game-meta {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .game-result {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .game-result.red-win {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--red-color);
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+
+        .game-result.blue-win {
+            background: rgba(52, 152, 219, 0.15);
+            color: var(--blue-color);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+
+        .game-result.draw {
+            background: rgba(136, 136, 160, 0.15);
+            color: var(--text-secondary);
+            border: 1px solid rgba(136, 136, 160, 0.3);
+        }
+
+        .game-moves {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .game-arrow {
+            color: var(--accent);
+            font-size: 1.1rem;
+            margin-left: 0.5rem;
+        }
+
+        .game-reason {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .no-results .emoji {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* Team filter dropdown */
+        .dropdown-wrapper {
+            position: relative;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 250px;
+            overflow-y: auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 var(--radius) var(--radius);
+            z-index: 50;
+            display: none;
+        }
+
+        .dropdown-list.visible {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.6rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.15s;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-card-hover);
+            color: var(--accent);
+        }
+
+        .team-stats-banner {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .team-stats-banner.visible {
+            display: flex;
+        }
+
+        .team-stats-banner .team-banner-name {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
+        .team-stats-banner .team-banner-stats {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .team-banner-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .team-banner-stat .label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .team-banner-stat .value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .team-banner-stat .value.win { color: var(--success); }
+        .team-banner-stat .value.loss { color: var(--error); }
+
+        @media (max-width: 700px) {
+            .header h1 { font-size: 1.8rem; }
+            .container { padding: 1rem; }
+            .game-meta { gap: 0.75rem; }
+            .game-main { gap: 0.75rem; }
+            .game-card { padding: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+            .game-moves { min-width: auto; }
+            .filter-bar { flex-direction: column; }
+            .team-stats-banner { flex-direction: column; gap: 1rem; text-align: center; }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav">
+        <a class="nav-brand" href="/">⚔ Bot Royale</a>
+        <ul class="nav-links">
+            <li><a href="/">Leaderboard</a></li>
+            <li><a href="/replays" class="active">Game Replays</a></li>
+            <li><a href="/bots">Bot Code</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Game Replays</h1>
+            <p>Watch every match from the tournament — search by team name</p>
+        </div>
+
+        <!-- Search / filter -->
+        <div class="filter-bar">
+            <div class="search-box dropdown-wrapper">
+                <input type="text" id="searchInput" placeholder="Search by team name..." autocomplete="off">
+                <div class="dropdown-list" id="teamDropdown"></div>
+            </div>
+            <button class="clear-filter" id="clearBtn" style="display:none;" onclick="clearFilter()">✕ Clear filter</button>
+        </div>
+
+        <!-- Team stats banner (visible when filtered) -->
+        <div class="team-stats-banner" id="teamBanner">
+            <div>
+                <div class="team-banner-name" id="bannerName"></div>
+                <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem;">Showing all games for this team</div>
+            </div>
+            <div class="team-banner-stats" id="bannerStats"></div>
+        </div>
+
+        <!-- Stats summary -->
+        <div class="stats-summary" id="statsSummary"></div>
+
+        <!-- Games list -->
+        <div class="games-grid" id="gamesGrid"></div>
+    </div>
+
+    <script>
+        const allGames = {{ games | tojson }};
+        const allTeams = {{ team_names | tojson }};
+        let filteredTeam = null;
+
+        // Check URL params for initial filter
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('team')) {
+            filteredTeam = urlParams.get('team');
+        }
+
+        function getFilteredGames() {
+            if (!filteredTeam) return allGames;
+            const t = filteredTeam.toLowerCase();
+            return allGames.filter(g =>
+                g.red_bot.toLowerCase() === t || g.blue_bot.toLowerCase() === t
+            );
+        }
+
+        function getTeamStats(teamName) {
+            const t = teamName.toLowerCase();
+            let wins = 0, losses = 0;
+            allGames.forEach(g => {
+                const isRed = g.red_bot.toLowerCase() === t;
+                const isBlue = g.blue_bot.toLowerCase() === t;
+                if (!isRed && !isBlue) return;
+                if ((g.winner === 'red' && isRed) || (g.winner === 'blue' && isBlue)) { wins++; }
+                else { losses++; }
+            });
+            return { wins, losses };
+        }
+
+        function renderGames() {
+            const games = getFilteredGames();
+            const grid = document.getElementById('gamesGrid');
+            const summary = document.getElementById('statsSummary');
+            const banner = document.getElementById('teamBanner');
+            const clearBtn = document.getElementById('clearBtn');
+
+            // Stats summary
+            summary.innerHTML = `<div class="stat-pill">Showing <strong>${games.length}</strong> game${games.length !== 1 ? 's' : ''}</div>`;
+
+            // Team banner
+            if (filteredTeam) {
+                const stats = getTeamStats(filteredTeam);
+                document.getElementById('bannerName').textContent = filteredTeam;
+                document.getElementById('bannerStats').innerHTML = `
+                    <div class="team-banner-stat"><span class="label">Wins</span><span class="value win">${stats.wins}</span></div>
+                    <div class="team-banner-stat"><span class="label">Losses</span><span class="value loss">${stats.losses}</span></div>
+                    <div class="team-banner-stat"><span class="label">Games</span><span class="value">${stats.wins + stats.losses}</span></div>
+                `;
+                banner.classList.add('visible');
+                clearBtn.style.display = 'inline-block';
+                document.getElementById('searchInput').value = filteredTeam;
+            } else {
+                banner.classList.remove('visible');
+                clearBtn.style.display = 'none';
+            }
+
+            if (games.length === 0) {
+                grid.innerHTML = `<div class="no-results"><span class="emoji">🔍</span>No games found${filteredTeam ? ' for "' + filteredTeam + '"' : ''}</div>`;
+                return;
+            }
+
+            grid.innerHTML = games.map(g => {
+                let resultClass = 'draw';
+                let resultText = '🤝 Draw';
+                if (g.winner === 'red') {
+                    resultClass = 'red-win';
+                    resultText = '🔴 Red wins';
+                } else if (g.winner === 'blue') {
+                    resultClass = 'blue-win';
+                    resultText = '🔵 Blue wins';
+                }
+
+                const reasonText = g.reason ? `<div class="game-reason">${g.reason}</div>` : '';
+
+                return `
+                    <a class="game-card" href="/replays/${g.id}">
+                        <div class="game-main">
+                            <div class="game-id">#${String(g.id).padStart(3, '0')}</div>
+                            <div class="game-teams">
+                                <span class="team-red">${g.red_bot}</span>
+                                <span class="vs">vs</span>
+                                <span class="team-blue">${g.blue_bot}</span>
+                            </div>
+                        </div>
+                        <div class="game-meta">
+                            ${reasonText}
+                            <span class="game-result ${resultClass}">${resultText}</span>
+                            <span class="game-moves">${g.num_moves} moves</span>
+                            <span class="game-arrow">→</span>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        function clearFilter() {
+            filteredTeam = null;
+            document.getElementById('searchInput').value = '';
+            window.history.replaceState({}, '', '/replays');
+            renderGames();
+        }
+
+        function setFilter(teamName) {
+            filteredTeam = teamName;
+            document.getElementById('searchInput').value = teamName;
+            document.getElementById('teamDropdown').classList.remove('visible');
+            window.history.replaceState({}, '', '/replays?team=' + encodeURIComponent(teamName));
+            renderGames();
+        }
+
+        // Search input with dropdown
+        const searchInput = document.getElementById('searchInput');
+        const dropdown = document.getElementById('teamDropdown');
+
+        searchInput.addEventListener('input', () => {
+            const val = searchInput.value.trim().toLowerCase();
+            if (val.length === 0) {
+                dropdown.classList.remove('visible');
+                if (filteredTeam) clearFilter();
+                return;
+            }
+            const matches = allTeams.filter(t => t.toLowerCase().includes(val));
+            if (matches.length === 0) {
+                dropdown.classList.remove('visible');
+                return;
+            }
+            dropdown.innerHTML = matches.map(t =>
+                `<div class="dropdown-item" onclick="setFilter('${t}')">${t}</div>`
+            ).join('');
+            dropdown.classList.add('visible');
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const val = searchInput.value.trim().toLowerCase();
+                const exactMatch = allTeams.find(t => t.toLowerCase() === val);
+                if (exactMatch) {
+                    setFilter(exactMatch);
+                } else {
+                    const partialMatch = allTeams.find(t => t.toLowerCase().includes(val));
+                    if (partialMatch) setFilter(partialMatch);
+                }
+            }
+            if (e.key === 'Escape') {
+                dropdown.classList.remove('visible');
+            }
+        });
+
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown-wrapper')) {
+                dropdown.classList.remove('visible');
+            }
+        });
+
+        // Initialize
+        renderGames();
+    </script>
+</body>
+
+</html>
