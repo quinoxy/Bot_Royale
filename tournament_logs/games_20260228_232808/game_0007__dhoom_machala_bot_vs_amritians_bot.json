@@ -1,0 +1,20 @@
+{
+  "red_bot": "dhoom_machala_bot",
+  "blue_bot": "amritians_bot",
+  "winner": "blue",
+  "reason": "red failed to return a move (no_output)",
+  "total_moves": 0,
+  "moves": [
+    {
+      "move_number": 0,
+      "player": "red",
+      "move": null,
+      "time_taken": 0.021419,
+      "remaining_time": 59.978581,
+      "result": "forfeit (no_output)",
+      "board_after": null
+    }
+  ],
+  "red_time_remaining": 59.978581,
+  "blue_time_remaining": 60.0
+}

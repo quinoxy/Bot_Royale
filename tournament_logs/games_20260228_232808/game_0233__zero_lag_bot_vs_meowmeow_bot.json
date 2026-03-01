@@ -1,0 +1,20 @@
+{
+  "red_bot": "zero_lag_bot",
+  "blue_bot": "meowmeow_bot",
+  "winner": "blue",
+  "reason": "red ran out of time",
+  "total_moves": 0,
+  "moves": [
+    {
+      "move_number": 0,
+      "player": "red",
+      "move": null,
+      "time_taken": 60.121621,
+      "remaining_time": -0.121621,
+      "result": "timeout",
+      "board_after": null
+    }
+  ],
+  "red_time_remaining": -0.121621,
+  "blue_time_remaining": 60.0
+}
