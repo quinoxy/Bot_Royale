@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AgentMigrationStateService">
+    <option name="pendingSessionIds">
+      <option value="67767d54-cbc9-4f73-bc83-5f22a1fa0db9" />
+    </option>
+    <option name="pendingTurns">
+      <map>
+        <entry key="67767d54-cbc9-4f73-bc83-5f22a1fa0db9">
+          <value>
+            <set>
+              <option value="6444fabb-a654-49f6-9454-055e64c7da04" />
+              <option value="f7900784-a8de-4d8e-b766-a5ff2976530f" />
+              <option value="dea56be0-f7f3-4240-83c6-9957c7690f2a" />
+            </set>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <pendingWorkingSetItems>
+      <entry key="67767d54-cbc9-4f73-bc83-5f22a1fa0db9">
+        <set>
+          <option value="file://$PROJECT_DIR$/tournament.py" />
+        </set>
+      </entry>
+    </pendingWorkingSetItems>
+  </component>
+</project>

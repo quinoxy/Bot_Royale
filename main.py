@@ -28,7 +28,7 @@ BLUE_IS_BOT = True
 RED_BOT_PATH = "bot.py"
 BLUE_BOT_PATH = "bot.py"
 
-INITIAL_TIME = 60.0  # seconds per player
+INITIAL_TIME = 90.0  # seconds per player
 
 # ===============================================
 
